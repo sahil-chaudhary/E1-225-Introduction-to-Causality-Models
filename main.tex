@@ -25,7 +25,8 @@
 \usepackage{float,url}
 \usepackage{amsthm}
 \usepackage{cleveref}
-
+\usepackage{forest}
+\usetikzlibrary{automata,positioning} 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{assumption}{Assumption}[section]
 \newtheorem{corollary}{Corollary}[theorem]
@@ -314,7 +315,7 @@
     Note that $P^{C_1} \And P^{C_2}$ have the same distribution but in SCM $C_1$, $Y$ is the cause and in SCM $C_2$, $X$ is the cause. Thus, given we have found same distribution doesnot tell us anything about the causation.
 
     \subsection{Bayesian Network}
-    A bayesian network is a directed acyclic graphs. \\
+    \subsubsection{Preliminaries}
     Let G=(V,E) be a graph with V vertices and $E \subseteq V \times V$.
     \begin{definition}
          A graph is said to be directed graph if, 
@@ -333,8 +334,126 @@
     \end{definition}
     \begin{definition}
         A path $(v_1,v_2,\cdots,v_k)$ is said to be \textbf{cycle} if $v_k=v_1$ and all others are distinct. 
+        \\
+        A cycle is called \textbf{directed} if the path is directed.
     \end{definition}
-    
+    \begin{definition}
+        A graph with directed edges and no directed cycles is \textbf{directed acyclic graphs}.
+    \end{definition}
+    \subsubsection{Bayesian Network}
+    \begin{definition}
+        A bayesian network is a directed acyclic graphs whose vertices are random variables. 
+    The probability distribution represented by it,
+    \begin{align}
+        \label{bayesian network}
+        P(x_1,x_2,\cdots,x_n)&= \prod_{i=1}^{n}P(x_i|pa_i)
+    \end{align}
+    where $x_1,x_2,\cdots,x_n$ are random variables 
+    and $pa_i$ is the set of nodes that are \textbf{Markovian Parent} of $x_i$ as described in \cref{parent def}.     
+    \end{definition}
+
+    \begin{definition}
+        \label{parent def}
+        Let $V=\{X_1,\cdots,X_n\}$ be an ordered set of variables, and let $P(v)$ be the joint probability distribution on these variables.
+        \\ A set of variables $PA_j$ is said to be \textbf{Markovian parents} of $X_j$  if $PA_j$ is a minimal set of predecessors of $X_j$ indepedent of all its other predecessors. In other words, $PA_j$ is any subset of $\{X_1,\cdots,X_{j-1}\}$ satisfying
+        \begin{align}
+            \label{markov parent}
+            P(x_j|pa_j)&=P(x_j|x_1,\cdots,x_{j-1})
+        \end{align}
+        and such that no proper subset of $PA_j$ satisfies \cref{markov parent}
+    \end{definition}
+    \textbf{Examples:}\\
+    \begin{enumerate}
+        \item 
+            \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto] 
+                \node[state](x) {$x$};
+                \node[state](y) [below right= of x]{$y$};
+                \node[state](z) [below left= of x]{$z$};
+                \path[->]
+                (x) edge node{}(y)
+                (x) edge node{}(z)
+                (y) edge node{}(z);
+            \end{tikzpicture} 
+        
+        \begin{align*}
+            P(x,y,z)&=P(x|pa_x)P(y|pa_y)P(z|pa_z)\\
+            &=P(x)P(y|x)P(z|x,y)
+        \end{align*}
+        \item 
+            \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto] 
+                \node[state](x) {$x$};
+                \node[state](y) [right= of x]{$y$};
+                \node[state](z) [right= of y]{$z$};
+                \path[->]
+                (x) edge node{}(y)
+                (y) edge node{}(z);
+            \end{tikzpicture} 
+        
+        \begin{align*}
+            P(x,y,z)&=P(x|pa_x)P(y|pa_y)P(z|pa_z)\\
+            &=P(x)P(y|x)P(z|y)
+        \end{align*}
+        \item 
+         \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto] 
+                \node[state](x) {$x$};
+                \node[state](y) [right= of x]{$y$};
+                \node[state](z) [below left= of y]{$z$};
+                \path[->]
+                (x) edge node{}(z)
+                (y) edge node{}(z);
+            \end{tikzpicture} 
+        
+        \begin{align*}
+            P(x,y,z)&=P(x|pa_x)P(y|pa_y)P(z|pa_z)\\
+            &=P(x)P(y)P(z|x,y)
+        \end{align*}
+        This structure is very popular and is called collider.
+    \end{enumerate}
+    \begin{definition}\textbf{(Markov Compatibility)}\\
+        If a probability function P admits the factorization of \cref{bayesian network} relative to DAG $G$, we say that $G$ represents $P$, that $G$ and $P$ are \textbf{compatible} or that $P$ is \textbf{Markov relative} to $G$
+    \end{definition}
+    \subsubsection{The d-seperation criterion}
+    \begin{definition}
+        A path p is said to be d-separated (or-blocked) by a set of nodes Z if and only if,
+        \begin{enumerate}
+            \item p contains a chain $i \rightarrow m \rightarrow j$ or a fork $i \leftarrow m \rightarrow$ such that middle node $m \in Z$ or,
+            \item p contains an inverted fork (or collider) $i \rightarrow m \leftarrow j$ such that the middle node $m \notin Z$ and such that no descendant of m is in Z.
+        \end{enumerate}
+        A set Z is said to d-separate X from Y if and only if Z blocks every path from a node in X to a node in Y.
+    \end{definition}
+    \textbf{Example:}
+    \begin{enumerate}
+        \item 
+            \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto] 
+                \node[state](x) {$x$};
+                \node[state](y) [right= of x]{$y$};
+                \node[state](z) [right= of y]{$z$};
+                \path[->]
+                (x) edge node{}(y)
+                (y) edge node{}(z);
+            \end{tikzpicture} 
+        
+        \begin{align*}
+            &x, z \text{ are d-separated by }\{y\}\\
+            & \text{but } x, z \text{ are d-separated by }\{y\}\\
+        \end{align*}
+        \item 
+         \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto] 
+                \node[state](x) {$x$};
+                \node[state](y) [right= of x]{$y$};
+                \node[state](z) [below left= of y]{$z$};
+                \path[->]
+                (x) edge node{}(z)
+                (y) edge node{}(z);
+            \end{tikzpicture} 
+      
+        \begin{align*}
+            &x, z \text{ are d-separated by }\{\}\\
+            & \text{but } x, z \text{ are not d-separated by }\{y\}\\
+        \end{align*}
+    \end{enumerate}
+    \textbf{Remark:} Learning in the Causal Model is equivalent to asking given data can we construct the Bayesian network of the features.
+    \textbf{Lecture 04}
 %	\bibliographystyle{alpha}
 %	\bibliography{opt-ml}
     
