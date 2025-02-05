@@ -200,7 +200,142 @@
     \cref{eq:Structural} is called structural because change in one of the $f_i's$ doesn't affect the other.
 
     \section{Lecture 03}
+    A food for thought: In traditional Machine Learning, we generally try to find or mimic the distribution and try to predict what should happen. But can we do something similar where causes and effects are involved? 
+
+    Well, we can't. Consider SCM's $C_1$ and $C_2$, they might have same distribution but different causes. Thus, We can't.\\
+    \textbf{Example}\\
+    \begin{align*}
+        C_1: & X=\frac{4}{10}Y+3N_x\\
+        &Y=10N_y\\
+        C_2: &X=5N_x\\
+        &Y=\frac{8}{5}X+6N_y
+    \end{align*}
+    where $N_x,N_y \sim N(0,1)$.\\
+    Then, the distribution of $C_1$ is,
+    \begin{align*}
+        P^{C_1} &\sim N\left(E\begin{bmatrix}
+            X \\
+            Y
+        \end{bmatrix}, E \left ( \begin{bmatrix}
+            X\\ Y
+        \end{bmatrix}-E\begin{bmatrix}
+            X \\
+            Y
+        \end{bmatrix}\right)^2\right)\\
+        &\sim N \left ( E\begin{bmatrix}
+            4N_y + 3N_x\\
+            10N_y
+        \end{bmatrix}, E\left[ \left ( \begin{bmatrix}
+           4N_y + 3N_x\\
+            10N_y 
+        \end{bmatrix}-E \begin{bmatrix}
+           4N_y + 3N_x\\
+            10N_y
+        \end{bmatrix}\right )^2\right]\right)\\
+        &\sim N \left ( \begin{bmatrix}
+            0\\0
+        \end{bmatrix},E\left[ \begin{bmatrix}
+           4N_y + 3N_x\\
+            10N_y 
+        \end{bmatrix}\begin{bmatrix}
+           4N_y + 3N_x &&
+            10N_y 
+        \end{bmatrix}\right]\right )\\
+        & \sim N \left ( \begin{bmatrix}
+            0\\0
+        \end{bmatrix},E  \begin{bmatrix}
+            16N_y^2+9N_x^2+24N_xN_y  && 40N_y^2 + 30 N_x N_y \\
+            40N_y^2 + 30 N_x N_y && 100N_y^2
+        \end{bmatrix}\right )\\
+        & \sim N \left (\begin{bmatrix}
+            0 \\
+            0
+        \end{bmatrix}, \begin{bmatrix}
+            25 && 40\\
+            40 && 100
+        \end{bmatrix} \right )
+    \end{align*}
+    and the distribution of $C_2$ is,
+    \begin{align*}
+        P^{C_2} &\sim N\left(E\begin{bmatrix}
+            X \\
+            Y
+        \end{bmatrix}, E \left ( \begin{bmatrix}
+            X\\ Y
+        \end{bmatrix}-E\begin{bmatrix}
+            X \\
+            Y
+        \end{bmatrix}\right)^2\right)\\
+        &\sim N \left (E \begin{bmatrix}
+            5N_x\\
+            8N_x +6N_y
+        \end{bmatrix}, E\left (  \begin{bmatrix}
+            5N_x\\
+            8N_x +6N_y
+        \end{bmatrix}-E \begin{bmatrix}
+            5N_x\\
+            8N_x +6N_y
+        \end{bmatrix}\right)^2 \right)\\
+        &\sim N \left ( \begin{bmatrix}
+            0 \\
+            0
+        \end{bmatrix},  E\left (  \begin{bmatrix}
+            5N_x\\
+            8N_x +6N_y
+        \end{bmatrix}-E \begin{bmatrix}
+            0\\
+            0
+        \end{bmatrix}\right)^2\right)\\
+        &\sim N \left ( \begin{bmatrix}
+            0 \\
+            0
+        \end{bmatrix}, E \left ( \begin{bmatrix}
+            5N_x\\
+            8N_x +6N_y
+        \end{bmatrix} \begin{bmatrix}
+            5N_x&&
+            8N_x +6N_y
+        \end{bmatrix} \right ) \right )\\
+        &\sim N \left (\begin{bmatrix}
+            0 \\
+            0
+        \end{bmatrix}, E \begin{bmatrix}
+            25N_x^2 && 40N_x^2+30N_xN_y\\
+            40N_x^2+30N_xN_y && 64N_x^2 + 36N_y^2 + 96N_xN_y
+        \end{bmatrix} \right )\\
+        &\sim N \left ( \begin{bmatrix}
+            0 \\
+            0
+        \end{bmatrix}, \begin{bmatrix}
+            25 && 40 \\
+            40 && 100
+        \end{bmatrix} \right )
+    \end{align*}
+    Note that $P^{C_1} \And P^{C_2}$ have the same distribution but in SCM $C_1$, $Y$ is the cause and in SCM $C_2$, $X$ is the cause. Thus, given we have found same distribution doesnot tell us anything about the causation.
+
+    \subsection{Bayesian Network}
+    A bayesian network is a directed acyclic graphs. \\
+    Let G=(V,E) be a graph with V vertices and $E \subseteq V \times V$.
+    \begin{definition}
+         A graph is said to be directed graph if, 
+         \begin{align*}
+             PA(v)&=\{ u: (u,v) \in E\}\\
+             Chi(v)&= \{u:(v,u) \in E\}
+         \end{align*}
+    \end{definition}
+    \begin{definition}
+        $v_1,v_2 \in V$ is said to be connected if $(v_1,v_2) \in E$ or $(v_2,v_1)\in E$.
+    \end{definition}
+    \begin{definition}
+        A path is a sequence of vertices $v_1,v_2,\cdots v_k$ such that $v_i,v_{i+1}$ are connected for all $i \in [k-1]$. \\
+        \noindent
+        A path $(v_1,v_2,\cdots,v_k)$ is said to be \textbf{directed} if $(v_i,v_{i+1}) \in E \quad \forall i \in [k-1] $.
+    \end{definition}
+    \begin{definition}
+        A path $(v_1,v_2,\cdots,v_k)$ is said to be \textbf{cycle} if $v_k=v_1$ and all others are distinct. 
+    \end{definition}
+    
 %	\bibliographystyle{alpha}
 %	\bibliography{opt-ml}
-	
+    
 \end{document}
